@@ -121,11 +121,11 @@ def train(show_vgg_params=False):
         print('epoch train loss = %f, epoch test loss = %f, %s'
                 %(train_loss/len(train_dataloader), test_loss/len(test_dataloader), time_str))
         
-
         if np.mod(epo, 5) == 0:
             torch.save(fcn_model, 'checkpoints/fcn_model_{}.pt'.format(epo))
             print('saveing checkpoints/fcn_model_{}.pt'.format(epo))
 
+    torch.save(fcn_model.state_dict(), 'model')
 
 if __name__ == "__main__":
     train(show_vgg_params=False)

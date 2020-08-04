@@ -291,7 +291,4 @@ Sequential(
 '''
 
 if __name__ == "__main__":
-    vgg_model = VGGNet(requires_grad=True, show_params=False)
-    fcn_model = FCNs(pretrained_net=vgg_model, n_class=2)
-    print(fcn_model)
-    # pass
+    pass

@@ -58,20 +58,19 @@ train_dataset, test_dataset = random_split(
     dataset,[train_size, test_size]
 )
 
-
 # num_workers: allocate batch to workers
 # larger num -> faster but need more GPU resource
 train_dataloader = DataLoader(
     train_dataset,
     batch_size=4,
     shuffle=True,
-    num_workers=1,
+    num_workers=WORKER_NUM,
 )
 test_dataloader = DataLoader(
     test_dataset,
     batch_size=4,
     shuffle=True,
-    num_workers=1,
+    num_workers=WORKER_NUM,
 )
 
 if __name__ =='__main__':
