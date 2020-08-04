@@ -7,7 +7,7 @@ import torch.nn as nn
 import torch.optim as optim
 import visdom
 
-from BagData import test_dataloader, train_dataloader
+from data_loader import test_dataloader, train_dataloader
 from FCN import FCN8s, FCN16s, FCN32s, FCNs, VGGNet
 
 
