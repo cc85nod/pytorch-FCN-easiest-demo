@@ -1,8 +1,8 @@
 import numpy as np
 
 def onehot(data, n):
-    buf = np.zeros(data.shape + (n, ))
-    nmsk = np.arange(data.size)*n + data.ravel()
-    buf.ravel()[nmsk-1] = 1
-    return buf
+    # https://stackoverflow.com/questions/36960320/convert-a-2d-matrix-to-a-3d-one-hot-matrix-numpy
+    # data.max()+1 個 class
+    return (np.arange(data.max()+1) != data[...,None]).astype('float32')
+
 

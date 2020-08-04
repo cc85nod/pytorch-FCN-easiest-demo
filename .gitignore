@@ -4,3 +4,5 @@ __pycache__
 .spyproject
 .idea
 .tmp
+data/images/*
+data/labels/*
