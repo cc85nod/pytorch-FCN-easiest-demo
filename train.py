@@ -7,14 +7,16 @@ import torch.nn as nn
 import torch.optim as optim
 import visdom
 
+from multiprocessing import set_start_method
 from data_loader import test_dataloader, train_dataloader
 from FCN import FCN8s, FCN16s, FCN32s, FCNs, VGGNet
+from config import *
 
+def train(show_vgg_params=False):
 
-def train(epo_num=50, show_vgg_params=False):
+    vis = visdom.Visdom(env='fcn')
 
-    vis = visdom.Visdom()
-
+    # Use cuda training if cuda is available
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     vgg_model = VGGNet(requires_grad=True, show_params=show_vgg_params)
@@ -26,12 +28,19 @@ def train(epo_num=50, show_vgg_params=False):
     all_train_iter_loss = []
     all_test_iter_loss = []
 
-    # start timing
+    # Start timing
     prev_time = datetime.now()
-    for epo in range(epo_num):
+
+    try:
+        set_start_method('spawn')
+    except:
+        pass
+
+    for epo in range(EPOCH_NUM):
         
         train_loss = 0
         fcn_model.train()
+        
         for index, (bag, bag_msk) in enumerate(train_dataloader):
             # bag.shape is torch.Size([4, 3, 160, 160])
             # bag_msk.shape is torch.Size([4, 2, 160, 160])
@@ -119,5 +128,4 @@ def train(epo_num=50, show_vgg_params=False):
 
 
 if __name__ == "__main__":
-
-    train(epo_num=100, show_vgg_params=False)
+    train(show_vgg_params=False)

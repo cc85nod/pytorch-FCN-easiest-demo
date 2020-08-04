@@ -1,8 +1,8 @@
 __pycache__
 .vscode
-.ipynb_checkpoints
 .spyproject
 .idea
 .tmp
 data/images/*
 data/labels/*
+checkpoints/fcn_model*

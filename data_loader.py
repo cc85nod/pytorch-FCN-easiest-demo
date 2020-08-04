@@ -1,11 +1,12 @@
 import os
-
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
 from torch.utils.data import random_split
 from torchvision import transforms # 提供 data 的操作, 如 tensor, PIL, numpy 的轉換, normalize 等
+from multiprocessing import set_start_method
+
 from config import *
 
 import cv2
@@ -58,22 +59,27 @@ train_dataset, test_dataset = random_split(
 )
 
 
+# num_workers: allocate batch to workers
+# larger num -> faster but need more GPU resource
 train_dataloader = DataLoader(
     train_dataset,
     batch_size=4,
     shuffle=True,
-    num_workers=4,
+    num_workers=1,
 )
 test_dataloader = DataLoader(
     test_dataset,
     batch_size=4,
     shuffle=True,
-    num_workers=4,
+    num_workers=1,
 )
 
-
-# if __name__ =='__main__':
-#     for train_batch in train_dataloader:
-#         print(train_batch)
-#     for test_batch in test_dataloader:
-#         print(test_batch)
+if __name__ =='__main__':
+    try:
+        set_start_method('spawn')
+    except RuntimeError:
+        pass
+    for train_batch in train_dataloader:
+        print(train_batch)
+    for test_batch in test_dataloader:
+        print(test_batch)
