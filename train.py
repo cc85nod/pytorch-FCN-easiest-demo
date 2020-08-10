@@ -9,7 +9,7 @@ import visdom
 
 from multiprocessing import set_start_method
 from data_loader import test_dataloader, train_dataloader
-from FCN import FCN8s, FCN16s, FCN32s, FCNs, VGGNet
+from FCN import FCN8s, VGGNet
 from config import *
 
 
@@ -38,7 +38,7 @@ def train(show_vgg_params=False):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     vgg_model = VGGNet(requires_grad=True, show_params=show_vgg_params)
-    fcn_model = FCNs(pretrained_net=vgg_model, n_class=2)
+    fcn_model = FCN8s(pretrained_net=vgg_model, n_class=2)
     # Copy data to GPU and run on GPU
     fcn_model = fcn_model.to(device)
 

@@ -6,12 +6,12 @@ import matplotlib.pyplot as plt
 
 from data_loader import test_dataloader
 from multiprocessing import set_start_method
-from FCN import FCNs, VGGNet
+from FCN import FCN8s, VGGNet
 from config import *
 from torchvision import transforms
 
 vgg_model = VGGNet(requires_grad=True, show_params=False)
-fcn_model = FCNs(vgg_model, 2)
+fcn_model = FCN8s(vgg_model, 2)
 
 # Load pytorch model
 fcn_model.load_state_dict(torch.load('model'))
