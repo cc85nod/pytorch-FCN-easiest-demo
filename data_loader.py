@@ -72,13 +72,3 @@ test_dataloader = DataLoader(
     shuffle=True,
     num_workers=WORKER_NUM,
 )
-
-if __name__ =='__main__':
-    try:
-        set_start_method('spawn')
-    except RuntimeError:
-        pass
-    for train_batch in train_dataloader:
-        print(train_batch)
-    for test_batch in test_dataloader:
-        print(test_batch)

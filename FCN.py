@@ -71,8 +71,8 @@ class FCN16s(nn.Module):
 
     def forward(self, x):
         output = self.pretrained_net(x)
-        x5 = output['x5']  
-        x4 = output['x4']  
+        x5 = output['x5']
+        x4 = output['x4']
 
         score = self.relu(self.deconv1(x5))             
         score = self.bn1(score + x4)
@@ -106,9 +106,9 @@ class FCN8s(nn.Module):
 
     def forward(self, x):
         output = self.pretrained_net(x)
-        x5 = output['x5']  
-        x4 = output['x4']  
-        x3 = output['x3']  
+        x5 = output['x5']
+        x4 = output['x4']
+        x3 = output['x3']
 
         score = self.relu(self.deconv1(x5))            
         score = self.bn1(score + x4)
@@ -144,11 +144,11 @@ class FCNs(nn.Module):
 
     def forward(self, x):
         output = self.pretrained_net(x)
-        x5 = output['x5']  
-        x4 = output['x4']  
-        x3 = output['x3']  
-        x2 = output['x2']  
-        x1 = output['x1']  
+        x5 = output['x5']
+        x4 = output['x4']
+        x3 = output['x3']
+        x2 = output['x2']
+        x1 = output['x1']
 
         score = self.bn1(self.relu(self.deconv1(x5)))   
         score = score + x4            
