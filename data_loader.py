@@ -62,13 +62,13 @@ train_dataset, test_dataset = random_split(
 # larger num -> faster but need more GPU resource
 train_dataloader = DataLoader(
     train_dataset,
-    batch_size=4,
+    batch_size=BATCH_SIZE,
     shuffle=True,
     num_workers=WORKER_NUM,
 )
 test_dataloader = DataLoader(
     test_dataset,
-    batch_size=1,
+    batch_size=BATCH_SIZE,
     shuffle=True,
     num_workers=WORKER_NUM,
 )

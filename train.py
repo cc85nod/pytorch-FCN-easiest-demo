@@ -12,9 +12,27 @@ from data_loader import test_dataloader, train_dataloader
 from FCN import FCN8s, FCN16s, FCN32s, FCNs, VGGNet
 from config import *
 
+
+
+"""
+1. define network (in FCN.py)
+    - VGG16 + deconv
+2. compile network (loss function, optimizer and metrics)
+    - optimizer: SGD
+    - loss function: binary cross-entropy
+3. fit network (epoch, validate, set batch_size and start trainning)
+    - epoch: EPOCH_NUM in config.py
+    - batch_size: BATCH_SIZE in config.py
+4. evaluate network (calculate result)
+5. make prediction
+"""
 def train(show_vgg_params=False):
 
     vis = visdom.Visdom(env='fcn')
+
+    """
+    torch.device: an object representing the device on which a torch.Tensor is or will be allocated
+    """
 
     # Use cuda training if cuda is available
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -33,7 +51,7 @@ def train(show_vgg_params=False):
     all_test_iter_loss = []
 
     # Start timing
-    prev_time = datetime.now()
+    stime = datetime.now()
 
     try:
         set_start_method('spawn')
@@ -42,9 +60,11 @@ def train(show_vgg_params=False):
 
     for epo in range(EPOCH_NUM):
         
+        """
+        Training part
+        """
         train_loss = 0
         fcn_model.train()
-        
         for idx, (img, label) in enumerate(train_dataloader):
             
             img = img.to(device)
@@ -59,15 +79,14 @@ def train(show_vgg_params=False):
             output = fcn_model(img)
             output = torch.sigmoid(output) # Get probability
 
-            # Calc loss
+            # Calc loss and backpropagation
             loss = criterion(output, label)
-            # Backpropagation
             loss.backward()
 
             # Extract loss value to echo
             iter_loss = loss.item()
-            all_train_iter_loss.append(iter_loss)
             train_loss += iter_loss
+            all_train_iter_loss.append(iter_loss)
             
             # Update all parameter
             optimizer.step()
@@ -80,74 +99,76 @@ def train(show_vgg_params=False):
             numpy(): cast tensor to numpy
             copy(): copy
             """
+
+            """
+            output.shape: torch.Size([BATCH_SIZE, 2, *IMAGE_SIZE])
+            output_np.shape: (BATCH_SIZE, 2, *IMAGE_SIZE)
+            np.argmin(output_np): (BATCH_SIZE, *IMAGE_SIZE)
+            np.squeeze(output_np[0, ...]).shape: (*IMAGE_SIZE)
+            """
             output_np = output.cpu().detach().numpy().copy()
             output_np = np.argmin(output_np, axis=1) # Get indice of smallest value of row
-            label_np = label.cpu().detach().numpy().copy() # label_np.shape = (4, 2, 160, 160) 
+            label_np = label.cpu().detach().numpy().copy()
             label_np = np.argmin(label_np, axis=1)
 
+            # 每 15 步紀錄一次
             if np.mod(idx, 15) == 0:
-                print('epoch {}, {}/{},train loss is {}'.format(epo, idx, len(train_dataloader), iter_loss))
-                # vis.close()
+                print('epoch {}, {}/{},train loss is {}'.format(epo, idx, len(train_dataloader), iter_loss)) # Log
+
+                # output_np[:, None, ...] == (batch_size, 1, height, width), batch_size 決定顯示圖片的數量
+                # visdom:
+                #   - win: windows
+                #   - opts: 設定 visualization 的 config
                 vis.images(output_np[:, None, :, :], win='train_pred', opts=dict(title='train prediction')) 
                 vis.images(label_np[:, None, :, :], win='train_label', opts=dict(title='label'))
                 vis.line(all_train_iter_loss, win='train_iter_loss',opts=dict(title='train iter loss'))
 
-            # plt.subplot(1, 2, 1) 
-            # plt.imshow(np.squeeze(label_np[0, ...]), 'gray')
-            # plt.subplot(1, 2, 2) 
-            # plt.imshow(np.squeeze(output_np[0, ...]), 'gray')
-            # plt.pause(0.5)
 
-        
+        """
+        Testing part
+        """
         test_loss = 0
         fcn_model.eval()
-        with torch.no_grad():
-            for idx, (img, label) in enumerate(test_dataloader):
+        for idx, (img, label) in enumerate(test_dataloader):
 
-                img = img.to(device)
-                label = label.to(device)
+            img = img.to(device)
+            label = label.to(device)
 
-                optimizer.zero_grad()
-                output = fcn_model(img)
-                output = torch.sigmoid(output) # output.shape is torch.Size([4, 2, 160, 160])
-                loss = criterion(output, label)
-                iter_loss = loss.item()
-                all_test_iter_loss.append(iter_loss)
-                test_loss += iter_loss
+            loss = criterion(output, label)
+            optimizer.zero_grad()
+            
+            output = fcn_model(img)
+            output = torch.sigmoid(output)
 
-                output_np = output.cpu().detach().numpy().copy() # output_np.shape = (4, 2, 160, 160)  
-                output_np = np.argmin(output_np, axis=1)
-                label_np = label.cpu().detach().numpy().copy() # label_np.shape = (4, 2, 160, 160) 
-                label_np = np.argmin(label_np, axis=1)
-        
-                if np.mod(idx, 15) == 0:
-                    print(r'Testing... Open http://localhost:8097/ to see test result.')
-                    # vis.close()
-                    vis.images(output_np[:, None, :, :], win='test_pred', opts=dict(title='test prediction')) 
-                    vis.images(label_np[:, None, :, :], win='test_label', opts=dict(title='label'))
-                    vis.line(all_test_iter_loss, win='test_iter_loss', opts=dict(title='test iter loss'))
+            iter_loss = loss.item()
+            test_loss += iter_loss
+            all_test_iter_loss.append(iter_loss)
 
-                # plt.subplot(1, 2, 1) 
-                # plt.imshow(np.squeeze(label_np[0, ...]), 'gray')
-                # plt.subplot(1, 2, 2) 
-                # plt.imshow(np.squeeze(output_np[0, ...]), 'gray')
-                # plt.pause(0.5)
+            output_np = output.cpu().detach().numpy().copy()
+            output_np = np.argmin(output_np, axis=1)
 
+            label_np = label.cpu().detach().numpy().copy()
+            label_np = np.argmin(label_np, axis=1)
+    
+            if np.mod(idx, 15) == 0:
+                print(r'Testing... Open http://localhost:8097/ to see test result.')
+                vis.images(output_np[:, None, :, :], win='test_pred', opts=dict(title='test prediction')) 
+                vis.images(label_np[:, None, :, :], win='test_label', opts=dict(title='label'))
+                vis.line(all_test_iter_loss, win='test_iter_loss', opts=dict(title='test iter loss'))
 
-        cur_time = datetime.now()
-        h, remainder = divmod((cur_time - prev_time).seconds, 3600)
+        etime = datetime.now() # End time
+        h, remainder = divmod((etime - stime).seconds, 3600)
         m, s = divmod(remainder, 60)
         time_str = "Time %02d:%02d:%02d" % (h, m, s)
-        prev_time = cur_time
+        stime = etime
 
+        # Log
         print('epoch train loss = %f, epoch test loss = %f, %s'
-                %(train_loss/len(train_dataloader), test_loss/len(test_dataloader), time_str))
-        
-        if np.mod(epo, 5) == 0:
-            torch.save(fcn_model, 'checkpoints/fcn_model_{}.pt'.format(epo))
-            print('saveing checkpoints/fcn_model_{}.pt'.format(epo))
+                % (train_loss / len(train_dataloader), test_loss / len(test_dataloader), time_str))
 
+    # Save trained model
     torch.save(fcn_model.state_dict(), 'model')
+
 
 if __name__ == "__main__":
     train(show_vgg_params=False)
